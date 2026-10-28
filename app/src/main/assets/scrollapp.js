@@ -1,12 +1,21 @@
 // ScrollApp page script. Injected into the YouTube Shorts, Instagram Reels and TikTok web feeds.
-// It reports the item on screen to the app (ScrollAppBridge) and carries out the app's commands
-// through window.__sh. The app prepends `window.__shConfig = {...}` with the per-site settings.
+// It reports the item on screen to the app and carries out the app's commands through window.__sh.
+// The app prepends `window.__shConfig = {...}` with the per-site settings.
+// Shared by the Android app (ScrollApp) and the iOS app (ScrollAppIOS); keep the copies identical.
 (function () {
   'use strict';
   if (window.top !== window || window.__sh) return;
 
   var cfg = window.__shConfig || {};
+  // Android injects ScrollAppBridge; iOS exposes a WebKit message handler.
   var bridge = window.ScrollAppBridge;
+  if (!bridge && window.webkit && window.webkit.messageHandlers && window.webkit.messageHandlers.scrollApp) {
+    bridge = {
+      post: function (json) {
+        window.webkit.messageHandlers.scrollApp.postMessage(json);
+      },
+    };
+  }
   var LIKE_RE = /^(like|нравится|мне нравится)/i;
   var UNLIKE_RE = /^(unlike|не нравится|больше не нравится)/i;
   var REPOST_RE = cfg.repostPattern ? new RegExp(cfg.repostPattern, 'i') : null;
@@ -372,6 +381,16 @@
     if (video && sh.active) video.muted = !on;
   };
 
+  // Presses a control from script, for iOS, which cannot send the page a real tap.
+  // Returns JSON: whether the control was found and, for likes, whether it was liked before.
+  sh.press = function (kind) {
+    var found = findControl(kind);
+    if (!found) return JSON.stringify({ found: false });
+    var liked = kind === 'like' ? isLiked(found.source) : null;
+    found.el.click();
+    return JSON.stringify({ found: true, liked: liked });
+  };
+
   // Where to tap for a control, in CSS pixels; the app taps it with a real touch.
   sh.control = function (kind) {
     var found = findControl(kind);
@@ -419,9 +438,32 @@
     return location.href;
   };
 
-  // Fallback for pages that ignore the app's synthetic swipe: scroll the feed from script.
+  function swiperOf(el) {
+    while (el && el !== document.body) {
+      if (el.swiper && typeof el.swiper.slideNext === 'function') return el.swiper;
+      el = el.parentElement;
+    }
+    return null;
+  }
+
+  // Moves the page's feed by one item from script: the site's own next/previous button, a Swiper
+  // instance (TikTok), or the feed's scroller (Instagram). Android uses it when its touch swipe is
+  // ignored; iOS always uses it.
   sh.nav = function (dir) {
-    var el = activeVideo() || document.elementFromPoint(innerWidth / 2, innerHeight / 2);
+    var buttonSelector = dir > 0 ? cfg.nextSelector : cfg.prevSelector;
+    var button = buttonSelector && document.querySelector(buttonSelector);
+    if (button) {
+      button.click();
+      return 'button';
+    }
+    var start = activeVideo() || document.elementFromPoint(innerWidth / 2, innerHeight / 2);
+    var swiper = swiperOf(start) || swiperOf(document.querySelector('.swiper'));
+    if (swiper) {
+      if (dir > 0) swiper.slideNext();
+      else swiper.slidePrev();
+      return 'swiper';
+    }
+    var el = start;
     while (el && el !== document.body && el !== document.documentElement) {
       if (isScroller(el)) {
         el.scrollBy({ top: dir * el.clientHeight, behavior: 'smooth' });

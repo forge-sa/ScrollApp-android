@@ -38,6 +38,9 @@ enum class Platform(
     val skipLive: Boolean = false,
     /** The page has no per-video links; the id has to come from its React props. */
     val videoIdInProps: Boolean = false,
+    /** The site's own next/previous buttons, used to move its feed from script. */
+    val nextSelector: String = "",
+    val prevSelector: String = "",
 ) {
     YOUTUBE(
         title = "YouTube Shorts",
@@ -53,6 +56,8 @@ enum class Platform(
         adSelector = "ytm-ad-slot-renderer, ad-slot-renderer, ytm-promoted-sparkles-web-renderer, ytm-reel-player-ad-overlay-renderer",
         likeSelector = "ytm-like-button-renderer button, like-button-view-model button",
         panelSelector = "ytm-engagement-panel-section-list-renderer, bottom-sheet-container, .engagement-panel-container",
+        nextSelector = ".ytShortsCarouselShortsA11yNav button:last-of-type",
+        prevSelector = ".ytShortsCarouselShortsA11yNav button:first-of-type",
         css = "ytm-promoted-sparkles-web-renderer, ytm-promoted-video-renderer, ytm-companion-ad-renderer, " +
             "ytm-mealbar-promo-renderer, ytm-statement-banner-renderer, ytm-ad-slot-renderer, ad-slot-renderer " +
             "{ display: none !important; }",
@@ -106,6 +111,8 @@ enum class Platform(
             .put("css", css)
             .put("skipLive", skipLive)
             .put("videoIdInProps", videoIdInProps)
+            .put("nextSelector", nextSelector)
+            .put("prevSelector", prevSelector)
         return "window.__shConfig = $config;\n$script"
     }
 }

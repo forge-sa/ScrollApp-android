@@ -1,5 +1,7 @@
 # ScrollApp
 
+There is also an iPhone version in [`../ScrollAppIOS`](../ScrollAppIOS).
+
 One vertical feed that mixes **YouTube Shorts, Instagram Reels and TikToks**, with autoscroll,
 ad/filler skipping, like and repost buttons, and statistics on how much you scroll.
 
@@ -38,6 +40,9 @@ the item is an ad, a LIVE stream, or a "suggested for you" / Threads card, which
 - **Threads posts / people suggestions**: these live in Instagram's home feed; the app only ever
   shows the Reels feed, and filler cards that do show up there are skipped.
 - **Statistics** are stored on the phone only. A video counts once it has actually played.
+
+The page script is shared with the iPhone version: after changing it, copy it to
+`../ScrollAppIOS/PageScript/scrollapp.js` and run `python3 PageScript/embed.py` there.
 
 ## When a site changes
 
