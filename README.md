@@ -1,6 +1,6 @@
 # ScrollApp
 
-There is also an iPhone version in [`../ScrollAppIOS`](../ScrollAppIOS).
+There is also an [`iPhone version`](https://github.com/forge-sa/ScrollAppIOS).
 
 One vertical feed that mixes **YouTube Shorts, Instagram Reels and TikToks**, with autoscroll,
 ad/filler skipping, like and repost buttons, and statistics on how much you scroll.
